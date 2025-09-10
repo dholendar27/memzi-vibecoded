@@ -1,6 +1,20 @@
-# AI Flashcard App
+# Memzi - AI Flashcard App
 
 A modern flashcard application with AI-powered generation and spaced repetition, built with Next.js, shadcn/ui, and PostgreSQL.
+
+## 🚀 Live Demo
+[Visit Memzi](https://your-app-name.onrender.com) (Will be updated after deployment)
+
+## ✨ Features
+
+- 🧠 **AI-Powered Generation**: Generate flashcards automatically using Google Gemini AI
+- 📚 **Deck Management**: Create, edit, and organize flashcards into decks
+- 🔄 **Spaced Repetition**: Scientifically-proven SM-2 algorithm for optimal learning
+- 🏷️ **Categories & Tags**: Organize decks with categories and tags
+- 📱 **PWA Support**: Works offline and can be installed on mobile devices
+- 🌙 **Dark Mode**: Built-in dark/light theme support
+- 📊 **Progress Tracking**: Track your learning progress over time
+- 🔐 **Authentication**: Secure user accounts with NextAuth.js
 
 ## Features
 

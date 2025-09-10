@@ -40,7 +40,12 @@ export default async function DeckPage({ params }: DeckPageProps) {
     ...deck,
     description: deck.description || undefined,
     lastStudied: deck.lastStudied || undefined,
-    categoryId: deck.categoryId || undefined
+    categoryId: deck.categoryId || undefined,
+    category: deck.category ? {
+      ...deck.category,
+      description: deck.category.description || undefined
+    } : undefined,
+    tags: deck.tags || undefined
   }
 
   return <DeckManager deck={transformedDeck} />
