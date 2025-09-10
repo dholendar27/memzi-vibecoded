@@ -1,12 +1,16 @@
 {
-  "name": "Flashcard App",
-  "short_name": "Flashcards",
-  "description": "A minimalist flashcard app with spaced repetition",
+  "name": "Memzi - AI Flashcard App",
+  "short_name": "Memzi",
+  "description": "Master any subject with AI-powered flashcards and spaced repetition",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -19,6 +23,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }
