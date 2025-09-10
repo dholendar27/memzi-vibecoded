@@ -27,22 +27,24 @@ export async function POST(request: NextRequest) {
 
     // If deckId is provided, save to that deck
     if (deckId) {
-      // Verify deck belongs to user
-      const deck = await prisma.deck.findFirst({
-        where: {
-          id: deckId,
-          userId: session.user.id
+      // Use a single transaction to reduce connection usage
+      const result = await prisma.$transaction(async (tx) => {
+        // Verify deck belongs to user
+        const deck = await tx.deck.findFirst({
+          where: {
+            id: deckId,
+            userId: session.user.id
+          }
+        })
+
+        if (!deck) {
+          throw new Error('Deck not found')
         }
-      })
 
-      if (!deck) {
-        return NextResponse.json({ error: 'Deck not found' }, { status: 404 })
-      }
-
-      // Create flashcards in the deck
-      const flashcards = await Promise.all(
-        generatedCards.map((card: any) =>
-          prisma.flashcard.create({
+        // Create flashcards one by one to avoid bulk operation issues
+        const createdCards = []
+        for (const card of generatedCards) {
+          const flashcard = await tx.flashcard.create({
             data: {
               front: card.front,
               back: card.back,
@@ -50,10 +52,13 @@ export async function POST(request: NextRequest) {
               deckId: deckId,
             }
           })
-        )
-      )
+          createdCards.push(flashcard)
+        }
 
-      return NextResponse.json({ flashcards })
+        return createdCards
+      })
+
+      return NextResponse.json({ flashcards: result })
     }
 
     // Return generated cards without saving
