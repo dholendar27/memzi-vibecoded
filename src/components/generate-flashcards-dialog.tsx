@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import {
     Select,
     SelectContent,
@@ -239,7 +240,7 @@ export function GenerateFlashcardsDialog({
                         {isLoading ? (
                             <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                                Generating...
+                                <span>Generating... (this may take 15-30s)</span>
                             </div>
                         ) : (
                             'Generate Flashcards'
@@ -280,27 +281,13 @@ export function GenerateFlashcardsDialog({
                                             <div className="space-y-2">
                                                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Question</div>
                                                 <div className="font-medium text-sm leading-relaxed p-3 bg-muted/30 rounded-md">
-                                                    {card.front}
+                                                    <MarkdownRenderer content={card.front} />
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Answer</div>
                                                 <div className="text-sm leading-relaxed p-3 bg-muted/30 rounded-md">
-                                                    <div className="whitespace-pre-wrap font-mono text-xs">
-                                                        {card.back.split('```').map((part: string, i: number) => {
-                                                            if (i % 2 === 1) {
-                                                                // This is code
-                                                                return (
-                                                                    <div key={i} className="bg-muted p-2 rounded border my-2 overflow-x-auto">
-                                                                        <code className="text-xs">{part.trim()}</code>
-                                                                    </div>
-                                                                )
-                                                            } else {
-                                                                // This is regular text
-                                                                return <span key={i} className="font-sans">{part}</span>
-                                                            }
-                                                        })}
-                                                    </div>
+                                                    <MarkdownRenderer content={card.back} />
                                                 </div>
                                             </div>
                                         </div>

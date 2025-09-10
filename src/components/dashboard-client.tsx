@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, BookOpen, Brain, LogOut, BarChart3, Tag, FolderOpen, User, Calendar, Target, Flame, Play, RefreshCw } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -32,6 +33,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
   const [stats, setStats] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('decks')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   const handleDeckCreated = async (newDeck: Deck) => {
     setDecks([newDeck, ...decks])
@@ -97,6 +99,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
 
   const fetchStats = async () => {
     try {
+      setIsLoadingStats(true)
       const response = await fetch('/api/dashboard/stats', {
         cache: 'no-store' // Ensure fresh data
       })
@@ -106,6 +109,8 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+    } finally {
+      setIsLoadingStats(false)
     }
   }
 
@@ -281,7 +286,44 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
                     </Button>
                   </div>
 
-                  {stats ? (
+                  {isLoadingStats ? (
+                    <>
+                      {/* Loading Skeleton */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                          <Card key={i} className="hover:shadow-md transition-all duration-200">
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <Skeleton className="w-10 h-10 rounded-lg" />
+                                <div className="space-y-2">
+                                  <Skeleton className="h-6 w-12" />
+                                  <Skeleton className="h-3 w-16" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                      <Card>
+                        <CardHeader>
+                          <Skeleton className="h-6 w-32" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {[...Array(3)].map((_, i) => (
+                              <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                                <div className="space-y-2">
+                                  <Skeleton className="h-4 w-24" />
+                                  <Skeleton className="h-3 w-16" />
+                                </div>
+                                <Skeleton className="h-8 w-16" />
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : stats ? (
                     <>
                       {/* Quick Stats */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

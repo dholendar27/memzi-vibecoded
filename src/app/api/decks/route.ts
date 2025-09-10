@@ -32,7 +32,10 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' }
     })
 
-    return NextResponse.json(decks)
+    // Add cache headers for better performance
+    const response = NextResponse.json(decks)
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300')
+    return response
   } catch (error) {
     return NextResponse.json(
       { error: 'Internal server error' },

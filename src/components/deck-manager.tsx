@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Plus, Edit, Trash2, Play, Settings, Tag as TagIcon, FolderOpen } from 'lucide-react'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -363,17 +364,17 @@ export function DeckManager({ deck: initialDeck }: DeckManagerProps) {
                       <h4 className="font-medium text-xs text-muted-foreground mb-2 uppercase tracking-wide">
                         Front
                       </h4>
-                      <p className="text-foreground leading-relaxed">
-                        {card.front}
-                      </p>
+                      <div className="text-foreground leading-relaxed">
+                        <MarkdownRenderer content={card.front} />
+                      </div>
                     </div>
                     <div>
                       <h4 className="font-medium text-xs text-muted-foreground mb-2 uppercase tracking-wide">
                         Back
                       </h4>
-                      <p className="text-foreground leading-relaxed">
-                        {card.back}
-                      </p>
+                      <div className="text-foreground leading-relaxed">
+                        <MarkdownRenderer content={card.back} />
+                      </div>
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-border/50">

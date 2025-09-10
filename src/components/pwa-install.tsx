@@ -21,42 +21,75 @@ export function PWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
-    // Check if it's iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    // More comprehensive iOS detection
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     setIsIOS(iOS)
 
-    // Check if app is already installed (standalone mode)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches
+    // Check if app is already installed (multiple methods)
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                      (window.navigator as any).standalone ||
+                      document.referrer.includes('android-app://')
     setIsStandalone(standalone)
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('beforeinstallprompt event fired')
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       setShowInstallPrompt(true)
     }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    // Listen for app installed event
+    const handleAppInstalled = () => {
+      console.log('PWA was installed')
+      setShowInstallPrompt(false)
+      setDeferredPrompt(null)
+    }
 
-    // For iOS, show install prompt if not in standalone mode
-    if (iOS && !standalone) {
-      setShowInstallPrompt(true)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    // For iOS, show install prompt if not in standalone mode and not dismissed
+    if (iOS && !standalone && !sessionStorage.getItem('pwa-install-dismissed')) {
+      setTimeout(() => setShowInstallPrompt(true), 2000) // Delay for better UX
+    }
+
+    // For Android, check if criteria are met
+    if (!iOS && !standalone && !sessionStorage.getItem('pwa-install-dismissed')) {
+      // Show prompt after a delay even if beforeinstallprompt doesn't fire
+      setTimeout(() => {
+        if (!deferredPrompt) {
+          setShowInstallPrompt(true)
+        }
+      }, 3000)
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-      
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null)
-        setShowInstallPrompt(false)
+      try {
+        await deferredPrompt.prompt()
+        const { outcome } = await deferredPrompt.userChoice
+        console.log('User choice:', outcome)
+        
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null)
+          setShowInstallPrompt(false)
+        }
+      } catch (error) {
+        console.error('Error during install prompt:', error)
       }
+    } else {
+      // Fallback for browsers that don't support beforeinstallprompt
+      alert('To install this app:\n\n' +
+            'Android: Tap the menu button (⋮) and select "Add to Home Screen"\n' +
+            'iOS: Tap the share button (↗) and select "Add to Home Screen"')
     }
   }
 
@@ -82,8 +115,8 @@ export function PWAInstall() {
             <h3 className="font-semibold text-sm">Install Memzi</h3>
             <p className="text-xs text-muted-foreground mt-1">
               {isIOS 
-                ? 'Tap the share button and select "Add to Home Screen"'
-                : 'Install our app for a better experience'
+                ? 'Tap the Share button (↗) and select "Add to Home Screen"'
+                : 'Install our app for offline access and better performance'
               }
             </p>
             <div className="flex gap-2 mt-3">

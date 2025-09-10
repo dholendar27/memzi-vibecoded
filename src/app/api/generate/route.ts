@@ -15,6 +15,11 @@ const generateSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  // Set timeout for the entire request
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Request timeout')), 25000) // 25 seconds
+  })
+
   try {
     const session = await getServerSession(authOptions)
     
@@ -25,8 +30,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { content, count, deckId } = generateSchema.parse(body)
 
-    // Generate flashcards using Gemini
-    const generatedCards = await generateFlashcards(content, count)
+    // Generate flashcards using Gemini with timeout
+    const generatedCards = await Promise.race([
+      generateFlashcards(content, count),
+      timeoutPromise
+    ]) as any[]
 
     // If deckId is provided, save to that deck
     if (deckId) {

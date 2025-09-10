@@ -6,6 +6,7 @@ import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Eye, ArrowRight } from 'luc
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Deck, Flashcard, CardStatus } from '@/types'
 
 interface StudyModeProps {
@@ -149,21 +150,10 @@ export function StudyMode({ deck }: StudyModeProps) {
                       {/* Question */}
                       <div>
                         <div className="text-2xl lg:text-3xl font-normal leading-relaxed text-foreground mb-6">
-                          <div className="whitespace-pre-wrap">
-                            {currentCard.front.split('```').map((part: string, i: number) => {
-                              if (i % 2 === 1) {
-                                // This is code
-                                return (
-                                  <div key={i} className="bg-muted p-4 rounded-lg border my-4 overflow-x-auto text-base">
-                                    <code className="font-mono text-foreground">{part.trim()}</code>
-                                  </div>
-                                )
-                              } else {
-                                // This is regular text
-                                return <span key={i} className="font-sans">{part}</span>
-                              }
-                            })}
-                          </div>
+                          <MarkdownRenderer 
+                            content={currentCard.front} 
+                            className="text-center"
+                          />
                         </div>
                         
                         {/* Difficulty Badge - Minimal */}
@@ -178,21 +168,10 @@ export function StudyMode({ deck }: StudyModeProps) {
                       {showAnswer && (
                         <div className="border-t border-border pt-8 animate-fade-in">
                           <div className="text-xl lg:text-2xl font-normal leading-relaxed text-muted-foreground text-left">
-                            <div className="whitespace-pre-wrap">
-                              {currentCard.back.split('```').map((part: string, i: number) => {
-                                if (i % 2 === 1) {
-                                  // This is code
-                                  return (
-                                    <div key={i} className="bg-muted p-4 rounded-lg border my-4 overflow-x-auto text-sm">
-                                      <code className="font-mono text-foreground">{part.trim()}</code>
-                                    </div>
-                                  )
-                                } else {
-                                  // This is regular text
-                                  return <span key={i} className="font-sans">{part}</span>
-                                }
-                              })}
-                            </div>
+                            <MarkdownRenderer 
+                              content={currentCard.back} 
+                              className="text-left"
+                            />
                           </div>
                         </div>
                       )}
