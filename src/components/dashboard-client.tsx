@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { Plus, BookOpen, Brain, LogOut, BarChart3, Tag, FolderOpen, User, Calendar, Target, Flame, Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, BookOpen, Brain, LogOut, BarChart3, Tag, FolderOpen, User, Calendar, Target, Flame, Play, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -19,11 +20,18 @@ interface DashboardClientProps {
 
 export function DashboardClient({ initialDecks }: DashboardClientProps) {
   const { data: session } = useSession()
+  const router = useRouter()
   const [decks, setDecks] = useState(initialDecks)
+
+  // Update decks when initialDecks prop changes
+  useEffect(() => {
+    setDecks(initialDecks)
+  }, [initialDecks])
   const [showCreateDeck, setShowCreateDeck] = useState(false)
   const [showGenerateCards, setShowGenerateCards] = useState(false)
   const [stats, setStats] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('decks')
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleDeckCreated = async (newDeck: Deck) => {
     setDecks([newDeck, ...decks])
@@ -34,6 +42,14 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
   const handleCardsGenerated = async () => {
     // Refresh decks data and stats
     await Promise.all([fetchDecks(), fetchStats()])
+  }
+
+  const handleTabChange = async (tab: string) => {
+    setActiveTab(tab)
+    // Refresh data when switching to overview tab
+    if (tab === 'overview') {
+      await Promise.all([fetchDecks(), fetchStats()])
+    }
   }
 
   const fetchDecks = async () => {
@@ -50,18 +66,55 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
 
   useEffect(() => {
     fetchStats()
+    fetchDecks() // Also fetch latest decks
     setActiveTab('overview') // Set default tab to overview
+  }, [])
+
+  // Refresh data when component becomes visible (user navigates back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh data
+        fetchStats()
+        fetchDecks()
+      }
+    }
+
+    const handleFocus = () => {
+      // Window gained focus, refresh data
+      fetchStats()
+      fetchDecks()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/dashboard/stats')
+      const response = await fetch('/api/dashboard/stats', {
+        cache: 'no-store' // Ensure fresh data
+      })
       if (response.ok) {
         const data = await response.json()
         setStats(data)
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
+    }
+  }
+
+  const refreshAllData = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([fetchDecks(), fetchStats()])
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -114,7 +167,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'overview' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('overview')}
+                onClick={() => handleTabChange('overview')}
                 className="w-full justify-start transition-all duration-200"
               >
                 <BarChart3 className="w-4 h-4 mr-3" />
@@ -123,7 +176,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'decks' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('decks')}
+                onClick={() => handleTabChange('decks')}
                 className="w-full justify-start transition-all duration-200"
               >
                 <BookOpen className="w-4 h-4 mr-3" />
@@ -137,7 +190,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'categories' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('categories')}
+                onClick={() => handleTabChange('categories')}
                 className="w-full justify-start transition-all duration-200"
               >
                 <FolderOpen className="w-4 h-4 mr-3" />
@@ -151,7 +204,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'tags' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('tags')}
+                onClick={() => handleTabChange('tags')}
                 className="w-full justify-start transition-all duration-200"
               >
                 <Tag className="w-4 h-4 mr-3" />
@@ -171,7 +224,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'overview' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('overview')}
+                onClick={() => handleTabChange('overview')}
                 className="flex-col h-auto py-2"
               >
                 <BarChart3 className="w-4 h-4" />
@@ -180,7 +233,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'decks' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('decks')}
+                onClick={() => handleTabChange('decks')}
                 className="flex-col h-auto py-2"
               >
                 <BookOpen className="w-4 h-4" />
@@ -189,7 +242,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'categories' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('categories')}
+                onClick={() => handleTabChange('categories')}
                 className="flex-col h-auto py-2"
               >
                 <FolderOpen className="w-4 h-4" />
@@ -198,7 +251,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
               <Button
                 variant={activeTab === 'tags' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setActiveTab('tags')}
+                onClick={() => handleTabChange('tags')}
                 className="flex-col h-auto py-2"
               >
                 <Tag className="w-4 h-4" />
@@ -211,9 +264,21 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
             <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
               {activeTab === 'overview' && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl sm:text-3xl font-semibold mb-2 tracking-tight">Overview</h2>
-                    <p className="text-muted-foreground">Your learning dashboard and statistics</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-semibold mb-2 tracking-tight">Overview</h2>
+                      <p className="text-muted-foreground">Your learning dashboard and statistics</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshAllData}
+                      disabled={isRefreshing}
+                      className="shrink-0"
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Refresh
+                    </Button>
                   </div>
 
                   {stats ? (
@@ -283,7 +348,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
                           <CardTitle className="flex items-center justify-between">
                             <span>Recent Decks</span>
                             {decks.length > 0 && (
-                              <Button variant="outline" size="sm" onClick={() => setActiveTab('decks')}>
+                              <Button variant="outline" size="sm" onClick={() => handleTabChange('decks')}>
                                 View All
                               </Button>
                             )}
@@ -321,7 +386,7 @@ export function DashboardClient({ initialDecks }: DashboardClientProps) {
                             <div className="text-center py-8">
                               <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                               <p className="text-muted-foreground mb-4">No decks created yet</p>
-                              <Button onClick={() => setActiveTab('decks')} size="sm">
+                              <Button onClick={() => handleTabChange('decks')} size="sm">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Create Your First Deck
                               </Button>

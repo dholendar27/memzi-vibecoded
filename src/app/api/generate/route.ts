@@ -5,6 +5,9 @@ import { generateFlashcards } from '@/lib/gemini'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 const generateSchema = z.object({
   content: z.string().min(1),
   count: z.number().min(1).max(20).default(5),
