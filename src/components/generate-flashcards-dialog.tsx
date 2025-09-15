@@ -240,7 +240,7 @@ export function GenerateFlashcardsDialog({
                         {isLoading ? (
                             <div className="flex items-center gap-2">
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                                <span>Generating... (this may take 15-30s)</span>
+                                <span>Generating... (this may take 30-45s)</span>
                             </div>
                         ) : (
                             'Generate Flashcards'

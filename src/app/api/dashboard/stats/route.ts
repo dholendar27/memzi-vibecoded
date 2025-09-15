@@ -17,24 +17,12 @@ export async function GET() {
 
     const userId = session.user.id
 
-    // Get total counts with optimized queries
+    // Get total counts with simplified queries
     const [totalDecks, totalFlashcards, totalCategories, totalTags] = await Promise.all([
-      prisma.deck.count({ 
-        where: { userId },
-        select: { _all: true }
-      }),
-      prisma.flashcard.count({ 
-        where: { deck: { userId } },
-        select: { _all: true }
-      }),
-      prisma.category.count({ 
-        where: { userId },
-        select: { _all: true }
-      }),
-      prisma.tag.count({ 
-        where: { userId },
-        select: { _all: true }
-      })
+      prisma.deck.count({ where: { userId } }),
+      prisma.flashcard.count({ where: { deck: { userId } } }),
+      prisma.category.count({ where: { userId } }),
+      prisma.tag.count({ where: { userId } })
     ])
 
     // Get progress stats

@@ -15,9 +15,9 @@ const generateSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  // Set timeout for the entire request
+  // Set timeout for the entire request (45 seconds)
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Request timeout')), 25000) // 25 seconds
+    setTimeout(() => reject(new Error('Request timeout - AI generation took too long')), 45000)
   })
 
   try {
@@ -30,11 +30,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { content, count, deckId } = generateSchema.parse(body)
 
+    // Validate content length
+    if (content.length > 10000) {
+      return NextResponse.json({ error: 'Content too long. Please limit to 10,000 characters.' }, { status: 400 })
+    }
+
     // Generate flashcards using Gemini with timeout
     const generatedCards = await Promise.race([
       generateFlashcards(content, count),
       timeoutPromise
     ]) as any[]
+
+    if (!generatedCards || generatedCards.length === 0) {
+      return NextResponse.json({ error: 'No flashcards were generated. Please try with different content.' }, { status: 400 })
+    }
 
     // If deckId is provided, save to that deck
     if (deckId) {
@@ -76,8 +85,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ flashcards: generatedCards })
   } catch (error) {
     console.error('Generate flashcards error:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to generate flashcards'
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        errorMessage = 'Request timed out. Please try with shorter content or fewer cards.'
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'AI response formatting error. Please try again.'
+      } else if (error.message.includes('API key')) {
+        errorMessage = 'AI service configuration error. Please contact support.'
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to generate flashcards' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
